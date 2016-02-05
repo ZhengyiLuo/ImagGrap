@@ -104,15 +104,15 @@ public class MainActivity extends Activity implements SensorEventListener, View.
             Matrix matrix = new Matrix();
             matrix.postRotate(mCameraOrientation);
 
-            Bitmap bmpSmall = Bitmap.createScaledBitmap(bmp, dimension, dimension, false);
-            Bitmap bmpSmallRotated = Bitmap.createBitmap(bmpSmall, 0, 0, dimension, dimension, matrix, false);
+            //     Bitmap bmpSmall = Bitmap.createScaledBitmap(bmp, dimension, dimension, false);
+
+            Bitmap bmpSmallRotated = Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), matrix, false);
 //            ByteArrayOutputStream baos = new ByteArrayOutputStream();
 //            Log.d(TAG_IMAG, "bmp" + bmpSmallRotated.toString());
 //            bmpSmallRotated.compress(Bitmap.CompressFormat.WEBP, 30, baos);
 
-
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bmpSmallRotated.compress(Bitmap.CompressFormat.WEBP, 100, stream);
+            bmpSmallRotated.compress(Bitmap.CompressFormat.WEBP, 5, stream);
             byte[] byteArray = stream.toByteArray();
 
             if (mReceiver.isConnected) {
@@ -129,8 +129,8 @@ public class MainActivity extends Activity implements SensorEventListener, View.
 
             }
             bmp.recycle();
-            bmpSmall.recycle();
-            bmpSmallRotated.recycle();
+            //   bmpSmall.recycle();
+//            bmpSmallRotated.recycle();
 
 
         }
