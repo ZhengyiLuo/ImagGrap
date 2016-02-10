@@ -26,14 +26,14 @@ import java.util.List;
  */
 public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 
+    private static final String DEVICE_NAME = "Zen";
+    public boolean isConnected = false;
+    public String host = "192.168.49.226";
     private WifiP2pManager mManager;
     private WifiP2pManager.Channel mChannel;
     private MainActivity mActivity;
     private WifiP2pManager.PeerListListener myPeerListListener;
     private ArrayList<WifiP2pDevice> deviceList;
-    private static final String DEVICE_NAME = "Zen";
-    public boolean isConnected = false;
-    public String host = "192.168.49.226";
 
     public WiFiDirectBroadcastReceiver(WifiP2pManager manager, WifiP2pManager.Channel channel,
                                        MainActivity activity) {
@@ -79,7 +79,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 
             }
         } else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
-            Log.d(mActivity.TAG_IMAG, "P2P peers changed");
+            Log.d(MainActivity.TAG_IMAG, "P2P peers changed");
 //
             // request available peers from the wifi p2p manager. This is an
             // asynchronous call and the calling activity is notified with a
@@ -88,7 +88,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
             mManager.requestPeers(mChannel, new WifiP2pManager.PeerListListener() {
                 @Override
                 public void onPeersAvailable(WifiP2pDeviceList peers) {
-                    Log.d(mActivity.TAG_IMAG, String.format("PeerListListener: %d peers available, updating device list", peers.getDeviceList().size()));
+                    Log.d(MainActivity.TAG_IMAG, String.format("PeerListListener: %d peers available, updating device list", peers.getDeviceList().size()));
                     deviceList.clear();
                     deviceList.addAll(peers.getDeviceList());
                     if (!isConnected) {
@@ -103,7 +103,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
                 return;
             }
 
-            NetworkInfo networkInfo = (NetworkInfo) intent
+            NetworkInfo networkInfo = intent
                     .getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
 
             if (networkInfo.isConnected()) {
@@ -154,7 +154,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
             Log.d(MainActivity.TAG_IMAG, device.deviceName);
 
             if (device.deviceName.equals(DEVICE_NAME)) {
-                Log.d(mActivity.TAG_IMAG, "Trying to connect to desired device");
+                Log.d(MainActivity.TAG_IMAG, "Trying to connect to desired device");
                 //obtain a peer from the WifiP2pDeviceList
                 config.deviceAddress = device.deviceAddress;
                 mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
@@ -197,7 +197,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
                 if (!intf.getName().contains("p2p"))
                     continue;
 
-                Log.v(mActivity.TAG_IMAG,
+                Log.v(MainActivity.TAG_IMAG,
                         intf.getName() + "   " + getMACAddress(intf.getName()));
 
                 List<InetAddress> addrs = Collections.list(intf
@@ -209,12 +209,12 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
                     if (!addr.isLoopbackAddress()) {
                         // Log.v(TAG, "isnt loopback");
                         String sAddr = addr.getHostAddress().toUpperCase();
-                        Log.v(mActivity.TAG_IMAG, "ip=" + sAddr);
+                        Log.v(MainActivity.TAG_IMAG, "ip=" + sAddr);
 
 
                         if (true) {
                             if (sAddr.contains("192.168.49.")) {
-                                Log.v(mActivity.TAG_IMAG, "ip = " + sAddr);
+                                Log.v(MainActivity.TAG_IMAG, "ip = " + sAddr);
                                 return sAddr;
                             }
                         }
@@ -225,9 +225,9 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
             }
 
         } catch (Exception ex) {
-            Log.v(mActivity.TAG_IMAG, "error in parsing");
+            Log.v(MainActivity.TAG_IMAG, "error in parsing");
         } // for now eat exceptions
-        Log.v(mActivity.TAG_IMAG, "returning empty ip address");
+        Log.v(MainActivity.TAG_IMAG, "returning empty ip address");
         return "";
     }
 

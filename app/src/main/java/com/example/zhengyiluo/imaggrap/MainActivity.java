@@ -1,10 +1,7 @@
 package com.example.zhengyiluo.imaggrap;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
-import android.graphics.Matrix;
 import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.hardware.Sensor;
@@ -20,7 +17,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
-import java.io.ByteArrayOutputStream;
 import java.util.List;
 
 public class MainActivity extends Activity implements SensorEventListener, View.OnClickListener {
@@ -44,6 +40,33 @@ public class MainActivity extends Activity implements SensorEventListener, View.
      * Camera object
      */
     Camera mCamera;
+    /**
+     * Callback fires when a new frame is available from the camera
+     */
+    private final Camera.PreviewCallback mPreviewCallback = new Camera.PreviewCallback() {
+        @Override
+        public void onPreviewFrame(byte[] data, Camera camera) {
+
+            //    incoming data is NV21
+            //    pass to native state
+            //  long image_timestamp = System.nanoTime();
+
+
+//            SQuadformationJNINative.update(data, mCaptureWidth, mCaptureHeight, data.length, image_timestamp);
+//            convert to the right format
+            if (camera != null) {
+                camera.addCallbackBuffer(data);
+
+//                Log.d(TAG_IMAG, "This is data" + data[1]);
+//                Log.d(TAG_IMAG, "This is data" + data[2]);
+            }
+
+            if (sender.sending) {
+                sender.updatedata(mCamera, data, mCameraOrientation);
+            }
+
+        }
+    };
     int CameraId = 0;
     /**
      * Android Sensor manager
@@ -71,70 +94,10 @@ public class MainActivity extends Activity implements SensorEventListener, View.
     byte[] mPreviewBuffer2 = null;
     int pixels = PREFERRED_WIDTH * PREFERRED_HEIGHT;
     IntentFilter mIntentFilter;
-    WifiP2pManager mManager;
-    WifiP2pManager.Channel mChannel;
-    WiFiDirectBroadcastReceiver mReceiver;
+    //WifiP2pManager mManager;
+    //WifiP2pManager.Channel mChannel;
+   // WiFiDirectBroadcastReceiver mReceiver;
     Thread ImageTransferThread;
-    /**
-     * Callback fires when a new frame is available from the camera
-     */
-    private final Camera.PreviewCallback mPreviewCallback = new Camera.PreviewCallback() {
-        @Override
-        public void onPreviewFrame(byte[] data, Camera camera) {
-
-            //    incoming data is NV21
-            //    pass to native state
-            long image_timestamp = System.nanoTime();
-//            SQuadformationJNINative.update(data, mCaptureWidth, mCaptureHeight, data.length, image_timestamp);
-            //convert to the right format
-
-            if (camera != null) {
-                camera.addCallbackBuffer(data);
-//                Log.d(TAG_IMAG, "This is data" + data[0]);
-//                Log.d(TAG_IMAG, "This is data" + data[1]);
-//                Log.d(TAG_IMAG, "This is data" + data[2]);
-            }
-            Camera.Size previewSize = mCamera.getParameters().getPreviewSize();
-            int[] rgb = decodeYUV420SP(data, previewSize.width, previewSize.height);
-            Bitmap bmp = Bitmap.createBitmap(rgb, previewSize.width, previewSize.height, Bitmap.Config.ARGB_8888);
-            int smallWidth, smallHeight;
-            int dimension = 200;
-            // stream is lagging, cut resolution and catch up
-
-            Matrix matrix = new Matrix();
-            matrix.postRotate(mCameraOrientation);
-
-            //     Bitmap bmpSmall = Bitmap.createScaledBitmap(bmp, dimension, dimension, false);
-
-            Bitmap bmpSmallRotated = Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), matrix, false);
-//            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//            Log.d(TAG_IMAG, "bmp" + bmpSmallRotated.toString());
-//            bmpSmallRotated.compress(Bitmap.CompressFormat.WEBP, 30, baos);
-
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bmpSmallRotated.compress(Bitmap.CompressFormat.WEBP, 5, stream);
-            byte[] byteArray = stream.toByteArray();
-
-            if (mReceiver.isConnected) {
-                sent = byteArray;
-
-//                Log.d(TAG_IMAG, "SENT" + sent[51]);
-//                Log.d(TAG_IMAG, "SENT" + sent[35]);
-//                Log.d(TAG_IMAG, "SENT" + sent[90]);
-
-//                sent = data;
-//                for (int i = 0; i < data.length; i++) {
-//                    Log.d(TAG, Byte.toString(data[i]));
-//                }
-
-            }
-            bmp.recycle();
-            //   bmpSmall.recycle();
-//            bmpSmallRotated.recycle();
-
-
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -160,18 +123,18 @@ public class MainActivity extends Activity implements SensorEventListener, View.
         startCameraPreview();
 
 
-        if (initSensorsJava) {
-            sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        }
+//        if (initSensorsJava) {
+//            sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+//            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+//            gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+//        }
 
 //        SQuadformationJNINative.onCreate();
 
-        //       Create BroadCastReceiver and WifiManager Instance
-        mManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
-        mChannel = mManager.initialize(this, getMainLooper(), null);
-        mReceiver = new WiFiDirectBroadcastReceiver(mManager, mChannel, this);
+        //  Create BroadCastReceiver and WifiManager Instance
+//        mManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
+//        mChannel = mManager.initialize(this, getMainLooper(), null);
+//        mReceiver = new WiFiDirectBroadcastReceiver(mManager, mChannel, this);
 
         //Create an intent filter and add the same intents that your broadcast receiver checks for:
         mIntentFilter = new IntentFilter();
@@ -212,12 +175,12 @@ public class MainActivity extends Activity implements SensorEventListener, View.
         }
 
         setCameraDisplayOrientation(this, CameraId, mCamera);
-        registerReceiver(mReceiver, mIntentFilter);
+      //  registerReceiver(mReceiver, mIntentFilter);
 
-        if (initSensorsJava) {
-            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-            sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
-        }
+//        if (initSensorsJava) {
+//            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+//            sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
+//        }
 
 
 //        SQuadformationJNINative.onStart();
@@ -226,7 +189,7 @@ public class MainActivity extends Activity implements SensorEventListener, View.
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(mReceiver);
+      //  unregisterReceiver(mReceiver);
     }
 
     @Override
@@ -356,7 +319,6 @@ public class MainActivity extends Activity implements SensorEventListener, View.
         mCamera.setParameters(params);
     }
 
-
     /**
      * @brief Disables the camera preview and corresponding callback.
      */
@@ -367,7 +329,6 @@ public class MainActivity extends Activity implements SensorEventListener, View.
 
         }
     }
-
 
     public void onSensorChanged(SensorEvent event) {
         //Log.d(TAG, event.sensor.getName() + " " + event.timestamp);
@@ -411,34 +372,6 @@ public class MainActivity extends Activity implements SensorEventListener, View.
         camera.setDisplayOrientation(result);
     }
 
-    public int[] decodeYUV420SP(byte[] yuv420sp, int width, int height) {
-        final int frameSize = width * height;
-        int rgb[] = new int[width * height];
-        for (int j = 0, yp = 0; j < height; j++) {
-            int uvp = frameSize + (j >> 1) * width, u = 0, v = 0;
-            for (int i = 0; i < width; i++, yp++) {
-                int y = (0xff & ((int) yuv420sp[yp])) - 16;
-                if (y < 0) y = 0;
-                if ((i & 1) == 0) {
-                    v = (0xff & yuv420sp[uvp++]) - 128;
-                    u = (0xff & yuv420sp[uvp++]) - 128;
-                }
-                int y1192 = 1192 * y;
-                int r = (y1192 + 1634 * v);
-                int g = (y1192 - 833 * v - 400 * u);
-                int b = (y1192 + 2066 * u);
-                if (r < 0) r = 0;
-                else if (r > 262143) r = 262143;
-                if (g < 0) g = 0;
-                else if (g > 262143) g = 262143;
-                if (b < 0) b = 0;
-                else if (b > 262143) b = 262143;
-                rgb[yp] = 0xff000000 | ((r << 6) & 0xff0000)
-                        | ((g >> 2) & 0xff00) | ((b >> 10) & 0xff);
-            }
-        }
-        return rgb;
-    }
 
     /**
      * Called when a view has been clicked.
@@ -453,30 +386,14 @@ public class MainActivity extends Activity implements SensorEventListener, View.
                 toast.show();
 
 
-                if (mManager != null) {
-                    mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
-                        @Override
-                        public void onSuccess() {
-                            Log.d(MainActivity.TAG_IMAG, "Success");
 
-
-                        }
-
-                        @Override
-                        public void onFailure(int reasonCode) {
-                            Log.d(MainActivity.TAG_IMAG, "Fail" + "Reason Code:" + Integer.toString(reasonCode));
-
-
-                        }
-                    });
-                }
-                if (!ImageTransferThread.isAlive()) {
-                    ImageTransferThread.start();
-                }
 
                 break;
             case R.id.button_send:
-                Log.d(MainActivity.TAG_IMAG, "We can't send it");
+                sender.send();
+                if (!ImageTransferThread.isAlive()) {
+                    ImageTransferThread.start();
+                }
                 break;
             case R.id.button_stop:
                 Log.d(MainActivity.TAG_IMAG, "Stop");
